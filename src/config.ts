@@ -1,12 +1,13 @@
 import path from "node:path";
 
-export const SERVER_NAME = "google-workspace";
+export const SERVER_NAME = "google-workspace-mcp";
 export const SERVER_VERSION = "1.0.0";
 
-export const DEFAULT_CLIENT_CREDENTIALS = path.join(
+export const DEFAULT_CREDENTIALS_PATH = path.join(
     process.cwd(),
     "credentials/OauthClient.json"
 );
+
 export const DEFAULT_TOKEN_PATH = path.join(
     process.cwd(),
     "credentials/tokens.json"
