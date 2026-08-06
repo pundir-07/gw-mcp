@@ -1,6 +1,5 @@
 import http from "node:http";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { resolveTransport, resolvePort } from "../config.ts";
@@ -26,12 +25,11 @@ export async function startServer(server: McpServer): Promise<void> {
             return;
         }
 
-        // stateless: no session tracking
         const transport = new StreamableHTTPServerTransport({
-            sessionIdGenerator: undefined as unknown as (() => string),
+            sessionIdGenerator: undefined,
         });
 
-        await server.connect(transport as Transport);
+        await server.connect(transport);
         await transport.handleRequest(req, res);
     });
 
