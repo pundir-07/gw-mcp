@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { GoogleAuth } from "../auth/GoogleAuth.ts";
 import { jsonResult, errorResult } from "../lib/response.ts";
+import { resolveDrive } from "../lib/resolveAuth.ts";
 
 // common fields reused across actions
 const fileId = z.string().describe("Google Drive file ID");
@@ -74,8 +75,8 @@ export function registerDriveTool(server: McpServer, auth: GoogleAuth): void {
             description: "Search, read, create, update, delete, and share files in Google Drive. Use the 'action' field to pick an operation.",
             inputSchema: ActionSchema,
         },
-        async (args) => {
-            const drive = auth.getDrive();
+        async (args, extra) => {
+            const drive = resolveDrive(auth, extra);
 
             try {
                 switch (args.action) {

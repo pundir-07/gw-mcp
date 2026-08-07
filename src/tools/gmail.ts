@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { GoogleAuth } from "../auth/GoogleAuth.ts";
 import { jsonResult, errorResult } from "../lib/response.ts";
+import { resolveGmail } from "../lib/resolveAuth.ts";
 
 const messageId = z.string().describe("Gmail message ID");
 const maxResults = z.number().optional().default(10).describe("Max results");
@@ -133,8 +134,8 @@ export function registerGmailTool(server: McpServer, auth: GoogleAuth): void {
             description: "Search, read, send, reply, label, draft, and trash emails. Use the 'action' field to pick an operation.",
             inputSchema: ActionSchema,
         },
-        async (args) => {
-            const gmail = auth.getGmail();
+        async (args, extra) => {
+            const gmail = resolveGmail(auth, extra);
             const userId = "me";
 
             try {

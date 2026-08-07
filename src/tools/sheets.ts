@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { GoogleAuth } from "../auth/GoogleAuth.ts";
 import { jsonResult, errorResult } from "../lib/response.ts";
+import { resolveSheets } from "../lib/resolveAuth.ts";
 
 const spreadsheetId = z.string().describe("Google Sheets spreadsheet ID");
 const range = z.string().describe("A1 notation range, e.g. 'Sheet1!A1:D10' or 'Sheet1'");
@@ -70,8 +71,8 @@ export function registerSheetsTool(server: McpServer, auth: GoogleAuth): void {
             description: "Read, write, append, and manage Google Sheets. Create spreadsheets, add tabs, clear ranges, or send raw batchUpdate requests. Use the 'action' field to pick an operation.",
             inputSchema: ActionSchema,
         },
-        async (args) => {
-            const sheets = auth.getSheets();
+        async (args, extra) => {
+            const sheets = resolveSheets(auth, extra);
 
             try {
                 switch (args.action) {

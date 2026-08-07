@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { GoogleAuth } from "../auth/GoogleAuth.ts";
 import { jsonResult, errorResult } from "../lib/response.ts";
+import { resolveCalendar } from "../lib/resolveAuth.ts";
 
 const calendarId = z.string().optional().default("primary").describe("Calendar ID (default: primary)");
 const eventId = z.string().describe("Calendar event ID");
@@ -109,8 +110,8 @@ export function registerCalendarTool(server: McpServer, auth: GoogleAuth): void 
             description: "List, create, update, delete calendar events. Quick-add events from natural language. Use the 'action' field to pick an operation.",
             inputSchema: ActionSchema,
         },
-        async (args) => {
-            const cal = auth.getCalendar();
+        async (args, extra) => {
+            const cal = resolveCalendar(auth, extra);
 
             try {
                 switch (args.action) {

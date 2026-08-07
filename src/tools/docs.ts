@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { GoogleAuth } from "../auth/GoogleAuth.ts";
 import { jsonResult, errorResult } from "../lib/response.ts";
+import { resolveDocs, resolveDrive } from "../lib/resolveAuth.ts";
 
 const documentId = z.string().describe("Google Docs document ID");
 
@@ -88,8 +89,8 @@ export function registerDocsTool(server: McpServer, auth: GoogleAuth): void {
             description: "Read, create, and edit Google Docs. Insert text, find/replace, or send raw batchUpdate requests. Use the 'action' field to pick an operation.",
             inputSchema: ActionSchema,
         },
-        async (args) => {
-            const docs = auth.getDocs();
+        async (args, extra) => {
+            const docs = resolveDocs(auth, extra);
 
             try {
                 switch (args.action) {
@@ -117,7 +118,7 @@ export function registerDocsTool(server: McpServer, auth: GoogleAuth): void {
                     case "create": {
                         // create via Drive so we can set the folder
                         if (args.folderId) {
-                            const drive = auth.getDrive();
+                            const drive = resolveDrive(auth, extra);
                             const res = await drive.files.create({
                                 requestBody: {
                                     name: args.title,

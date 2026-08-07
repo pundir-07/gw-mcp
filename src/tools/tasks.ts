@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { GoogleAuth } from "../auth/GoogleAuth.ts";
 import { jsonResult, errorResult } from "../lib/response.ts";
+import { resolveTasks } from "../lib/resolveAuth.ts";
 
 const taskListId = z.string().optional().default("@default").describe("Task list ID (default: user's primary list)");
 const requiredTaskListId = z.string().describe("Task list ID");
@@ -76,8 +77,8 @@ export function registerTasksTool(server: McpServer, auth: GoogleAuth): void {
             description: "Manage task lists and tasks — create, update, complete, delete, reorder. Use the 'action' field to pick an operation.",
             inputSchema: ActionSchema,
         },
-        async (args) => {
-            const tasks = auth.getTasks();
+        async (args, extra) => {
+            const tasks = resolveTasks(auth, extra);
 
             try {
                 switch (args.action) {
