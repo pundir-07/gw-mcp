@@ -91,9 +91,19 @@ export class GoogleAuth {
     private auth(): Auth.OAuth2Client {
         const client = this.ensureClient();
 
+        // 1. Try to load tokens from Environment Variables
+        if (process.env.GOOGLE_ACCESS_TOKEN) {
+            client.setCredentials({
+                access_token: process.env.GOOGLE_ACCESS_TOKEN,
+                refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+            });
+            return client;
+        }
+
+        // 2. Fallback to tokens.json file
         if (!fs.existsSync(this.tokenPath)) {
             throw new Error(
-                `No token file at ${this.tokenPath}. Run: npm run auth`
+                `No Google Workspace tokens found! Either set GOOGLE_ACCESS_TOKEN in env, or run: npm run auth`
             );
         }
 
@@ -108,14 +118,26 @@ export class GoogleAuth {
     private ensureClient(): Auth.OAuth2Client {
         if (this.oauth2Client) return this.oauth2Client;
 
-        const raw = fs.readFileSync(this.credentialsPath, "utf8");
-        const config = JSON.parse(raw) as OAuthClientConfig;
-        const { client_id, client_secret, redirect_uris } = config.installed;
+        let clientId = process.env.GOOGLE_CLIENT_ID;
+        let clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+        let redirectUri = "http://localhost";
+
+        // Fallback to OauthClient.json if env vars are missing
+        if (!clientId || !clientSecret) {
+            if (!fs.existsSync(this.credentialsPath)) {
+                throw new Error(`Missing OAuth credentials. Set GOOGLE_CLIENT_ID/SECRET in env, or provide ${this.credentialsPath}`);
+            }
+            const raw = fs.readFileSync(this.credentialsPath, "utf8");
+            const config = JSON.parse(raw) as OAuthClientConfig;
+            clientId = config.installed.client_id;
+            clientSecret = config.installed.client_secret;
+            redirectUri = config.installed.redirect_uris[0] ?? redirectUri;
+        }
 
         this.oauth2Client = new google.auth.OAuth2(
-            client_id,
-            client_secret,
-            redirect_uris[0]
+            clientId,
+            clientSecret,
+            redirectUri
         );
 
         // auto-persist refreshed tokens
